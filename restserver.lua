@@ -115,6 +115,9 @@ local function wsapi_handler_with_self(self, wsapi_env)
 
    local placeholder_matches = (entry.rest_path ~= entry.match_path) and { wsapi_env.PATH_INFO:match(entry.match_path) } or {}
    local res = entry.handler(input, unpack(placeholder_matches))
+   if not res then
+      return fail(500, "Internal Server Error - Server failed to produce a response.")
+   end
 
    local output, err = encode(res.config.entity, entry.produces, entry.output_schema)
    if not output then
