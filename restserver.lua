@@ -12,7 +12,6 @@ local function add_resource(self, name, entries)
       entry.rest_path = path
       entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)") .. "$"
       path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+") .. "$"
-print(path)
       local methods = self.config.paths[path]
       if not methods then
          methods = {}
