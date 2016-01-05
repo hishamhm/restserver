@@ -23,10 +23,7 @@ REST API provided by the server is a shell script powered by Curl.
 Author
 ------
 
-Hisham Muhammad
-
-* @hisham_hm
-* http://hisham.hm/
+Hisham Muhammad - (http://twitter.com/hisham_hm)[@hisham_hm] - http://hisham.hm/
 
 License
 -------
