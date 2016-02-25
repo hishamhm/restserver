@@ -100,11 +100,11 @@ local function wsapi_handler_with_self(self, wsapi_env)
    end
 
    local input, err
-   if wreq.POST then
+   if wreq.method == "POST" then
       input, err = decode(wreq.POST.post_data, entry.consumes, entry.input_schema)
-   elseif wreq.GET then
+   elseif wreq.method == "GET" then
       input = wreq.GET
-   elseif wreq.DELETE then
+   elseif wreq.method == "DELETE" then
       input = ""
    else
       error("Other methods not implemented yet.")
