@@ -25,7 +25,6 @@ local function add_resource(self, name, entries)
    end
 end
 
-
 local function type_check(tbl, schema)
    for k, s in pairs(schema) do
       if not tbl[k] and not s.optional then
@@ -76,10 +75,17 @@ local function encode(data, mimetype, schema)
    end
 end
 
-local function fail(code, msg)
-   local wres = response.new(code, { ["Content-Type"] = "text/plain" })
-   wres:write(tostring(code).." "..msg)
-   return wres:finish()
+local function fail(self, request, code, msg)
+	local res = self.error_handler( request, code, msg )
+	local headers = res.headers or { ["Content-Type"] = "text/plain" }
+	local wres = response.new( code, headers )
+	local output, err = encode(res.response, headers["Content-Type"])
+	if not output then
+	  return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
+	end
+	wres:write( output )
+
+	return wres:finish()
 end
 
 local function match_path(self, path_info)
@@ -96,7 +102,7 @@ local function wsapi_handler_with_self(self, wsapi_env)
 
    local entry = methods and methods[wreq.method]
    if not entry then
-      return fail(405, "Method Not Allowed")
+      return fail(self, wreq, 405, "Method Not Allowed")
    end
 
    local input, err
@@ -110,23 +116,23 @@ local function wsapi_handler_with_self(self, wsapi_env)
       error("Other methods not implemented yet.")
    end
    if not input then
-      return fail(400, "Bad Request - Your request fails schema validation: "..err)
+      return fail(self, wreq, 400, "Bad Request - Your request fails schema validation: "..err)
    end
 
    local placeholder_matches = (entry.rest_path ~= entry.match_path) and { wsapi_env.PATH_INFO:match(entry.match_path) } or {}
    local ok, res = pcall(entry.handler, input, unpack(placeholder_matches))
    if not ok then
-      return fail(500, "Internal Server Error - Error in application: "..res)
+      return fail(self, wreq, 500, "Internal Server Error - Error in application: "..res)
    end
    if not res then
-      return fail(500, "Internal Server Error - Server failed to produce a response.")
+      return fail(self, wreq, 500, "Internal Server Error - Server failed to produce a response.")
    end
 
    local output, err = encode(res.config.entity, entry.produces, entry.output_schema)
    if not output then
-      return fail(500, "Internal Server Error - Server built a response that fails schema validation: "..err)
+      return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
    end
-   
+
    local wres = response.new(res.config.status, { ["Content-Type"] = entry.produces or "text/plain" })
    wres:write(output)
    return wres:finish()
@@ -156,6 +162,9 @@ function restserver.new()
    add_setter(server, "port")
    server.wsapi_handler = function(wsapi_env)
       return wsapi_handler_with_self(server, wsapi_env)
+   end
+   server.error_handler = function(request, code, msg, options)
+      return { response = tostring(code).." "..msg }
    end
    return server
 end
