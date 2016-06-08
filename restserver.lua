@@ -8,10 +8,10 @@ local unpack = unpack or table.unpack
 
 local function add_resource(self, name, entries)
    for _, entry in ipairs(entries) do
-      local path = ("/" .. name .. "/" .. entry.path):gsub("/+", "/"):gsub("/$", "")
+      local path = ("^/" .. name .. "/" .. entry.path):gsub("/+", "/"):gsub("/$", "") .. "$"
       entry.rest_path = path
-      entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)") .. "$"
-      path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+") .. "$"
+      entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)")
+      path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+")
       local methods = self.config.paths[path]
       if not methods then
          methods = {}
@@ -98,8 +98,7 @@ end
 
 local function wsapi_handler_with_self(self, wsapi_env)
    local wreq = request.new(wsapi_env)
-   local methods = self.config.paths[wsapi_env.PATH_INFO] or match_path(self, wsapi_env.PATH_INFO)
-
+   local methods = self.config.paths["^" .. wsapi_env.PATH_INFO .. "$"] or match_path(self, wsapi_env.PATH_INFO)
    local entry = methods and methods[wreq.method]
    if not entry then
       return fail(self, wreq, 405, "Method Not Allowed")
