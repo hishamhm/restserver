@@ -150,7 +150,6 @@ function restserver.new()
          return self
       end,
       add_resource = add_resource,
-      shutdown = shutdown,
    }
    add_setter(server, "host")
    add_setter(server, "port")

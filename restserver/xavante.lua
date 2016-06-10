@@ -26,7 +26,7 @@ local function start(self)
    local ok, err = pcall(xavante.start, function()
       io.stdout:flush()
       io.stderr:flush()
-      return not self.should_terminate
+      return self.should_terminate
    end, nil)
    
    if not ok then
