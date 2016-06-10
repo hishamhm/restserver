@@ -25,7 +25,6 @@ local function add_resource(self, name, entries)
    end
 end
 
-
 local function type_check(tbl, schema)
    for k, s in pairs(schema) do
       if not tbl[k] and not s.optional then
@@ -151,6 +150,7 @@ function restserver.new()
          return self
       end,
       add_resource = add_resource,
+      shutdown = shutdown,
    }
    add_setter(server, "host")
    add_setter(server, "port")

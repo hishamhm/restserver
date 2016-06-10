@@ -26,7 +26,7 @@ local function start(self)
    local ok, err = pcall(xavante.start, function()
       io.stdout:flush()
       io.stderr:flush()
-      return false
+      return not self.should_terminate
    end, nil)
    
    if not ok then
@@ -35,8 +35,13 @@ local function start(self)
    return true
 end
 
+local function shutdown(self)
+   self.should_terminate = true
+end
+
 function restserver_xavante.extend(self)
    self.start = start
+   self.shutdown = shutdown
 end
 
 return restserver_xavante
