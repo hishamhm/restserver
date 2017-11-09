@@ -8,7 +8,7 @@ local unpack = unpack or table.unpack
 
 local function add_resource(self, name, entries)
    for _, entry in ipairs(entries) do
-      local path = ("^/" .. name .. "/" .. entry.path):gsub("/+", "/"):gsub("/$", "") .. "$"
+      local path = ("^/" .. name .. "/" .. entry.path):gsub("%-", "%%-"):gsub("/+", "/"):gsub("/$", "") .. "$"
       entry.rest_path = path
       entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)")
       path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+")
@@ -19,7 +19,8 @@ local function add_resource(self, name, entries)
          table.insert(self.config.path_list, path)
       end
       if methods[entry.method] then
-         error("A handler for method "..entry.method.." in path "..path.." is already defined.")
+         local ui_path = "/" .. name .. "/" .. entry.path
+         error("A handler for method "..entry.method.." in path "..ui_path.." is already defined.")
       end
       methods[entry.method] = entry
    end
