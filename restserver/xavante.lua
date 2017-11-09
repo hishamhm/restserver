@@ -21,7 +21,7 @@ local function start(self)
    end
 
    -- HACK: There's no public API to change the server identification
-   xavante._VERSION = "SGA"
+   xavante._VERSION = self.server_name or "RestServer"
    xavante.HTTP {
       server = {host = self.config.host or "*", port = self.config.port or 8080 },
       defaultHost = {

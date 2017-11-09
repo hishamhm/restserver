@@ -130,6 +130,9 @@ server:set_error_handler({
    end,
 })
 
+-- You can report your own server name
+server.server_name = "My To-do Server"
+
 -- This loads the restserver.xavante plugin
 server:enable("restserver.xavante"):start()
 
