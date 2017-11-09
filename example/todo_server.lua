@@ -118,6 +118,18 @@ server:add_resource("todo", {
    
 })
 
+-- You can create your custom error handler
+server:set_error_handler({
+   produces = "application/json",
+   handler = function(code, msg)
+      return {
+         code = code,
+         message = msg,
+         custom_error_field = "Think about it!",
+      }
+   end,
+})
+
 -- This loads the restserver.xavante plugin
 server:enable("restserver.xavante"):start()
 

@@ -26,6 +26,16 @@ local function add_resource(self, name, entries)
    end
 end
 
+local function set_error_handler(self, entry)
+   self.error_handler = function(_, code, msg)
+      return {
+         response = entry.handler(code, msg),
+         headers = { ["Content-Type"] = entry.produces or "text/plain" }
+      }
+   end
+   self.error_schema = entry.output_schema
+end
+
 local function type_check(tbl, schema)
    for k, s in pairs(schema) do
       if not tbl[k] and not s.optional then
@@ -76,16 +86,28 @@ local function encode(data, mimetype, schema)
    end
 end
 
-local function fail(self, wreq, code, msg)
+local function get_error_response(self, code, msg, wreq)
    local res = self.error_handler(wreq, code, msg)
-   local headers = res.headers or { ["Content-Type"] = "text/plain" }
-   local wres = response.new( code, headers )
-   local output, err = encode(res.response, headers["Content-Type"], self.error_schema)
+   res.headers = res.headers or { ["Content-Type"] = "text/plain" }
+   local output, err = encode(res.response, res.headers["Content-Type"], self.error_schema)
    if not output then
-      return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
+      return nil, err
+   end
+   res.content = output
+   return res
+end
+
+local function fail(self, wreq, code, msg)
+   local res, err = get_error_response(self, wreq, code, msg)
+   local wres = response.new(code, res.headers)
+   local output
+   if res then
+      wres = response.new(500, { ["Content-Type"] = "text/plain" })
+      output = "Internal Server Error - Server built a response that fails schema validation: "..err
+   else
+      output = res.content
    end
    wres:write(output)
-
    return wres:finish()
 end
 
@@ -157,6 +179,8 @@ function restserver.new()
          return self
       end,
       add_resource = add_resource,
+      set_error_handler = set_error_handler,
+      get_error_response = get_error_response, -- To be used by server plugins
    }
    add_setter(server, "host")
    add_setter(server, "port")

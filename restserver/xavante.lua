@@ -2,6 +2,7 @@
 local restserver_xavante = {}
 
 local xavante = require("xavante")
+local httpd = require("xavante.httpd")
 local wsapi = require("wsapi.xavante")
 
 local function start(self)
@@ -22,6 +23,22 @@ local function start(self)
          rules = rules
       }
    }
+
+   local function make_error_handler(code, msg)
+      httpd["err_" .. tostring(code)] = function(_, res)
+         res.statusline = "HTTP/1.1 " .. tostring(code) .. " " .. msg
+         local rest_res = self:get_error_response(code, msg)
+         for k, v in pairs(rest_res.headers) do
+            res.headers[k] = v
+         end
+         res.content = rest_res.content
+         return res
+      end
+   end
+   
+   make_error_handler(403, "Forbidden")
+   make_error_handler(404, "Not Found")
+   make_error_handler(405, "Method Not Allowed")
    
    local ok, err = pcall(xavante.start, function()
       io.stdout:flush()
