@@ -121,7 +121,8 @@ end
 
 local function wsapi_handler_with_self(self, wsapi_env)
    local wreq = request.new(wsapi_env)
-   local methods = self.config.paths["^" .. wsapi_env.PATH_INFO .. "$"] or match_path(self, wsapi_env.PATH_INFO)
+   local input_path = wsapi_env.PATH_INFO:gsub("/$", "")
+   local methods = self.config.paths["^" .. input_path .. "$"] or match_path(self, wsapi_env.PATH_INFO)
    local entry = methods and methods[wreq.method]
    if not entry then
       return fail(self, wreq, 405, "Method Not Allowed")
@@ -141,7 +142,7 @@ local function wsapi_handler_with_self(self, wsapi_env)
       return fail(self, wreq, 400, "Bad Request - Your request fails schema validation: "..err)
    end
 
-   local placeholder_matches = (entry.rest_path ~= entry.match_path) and { wsapi_env.PATH_INFO:match(entry.match_path) } or {}
+   local placeholder_matches = (entry.rest_path ~= entry.match_path) and { input_path:match(entry.match_path) } or {}
    local ok, res = pcall(entry.handler, wreq, input, unpack(placeholder_matches))
    if not ok then
       return fail(self, wreq, 500, "Internal Server Error - Error in application: "..res)

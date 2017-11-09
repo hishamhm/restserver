@@ -7,11 +7,16 @@ local wsapi = require("wsapi.xavante")
 
 local function start(self)
    local rules = {}
+   local handler = wsapi.makeHandler(self.wsapi_handler)
    for path, _ in pairs(self.config.paths) do
       -- TODO support placeholders in paths
       rules[#rules + 1] = {
+         match = path:gsub("%$", "/$"),
+         with = handler,
+      }
+      rules[#rules + 1] = {
          match = path,
-         with = wsapi.makeHandler(self.wsapi_handler)
+         with = handler,
       }
    end
 
