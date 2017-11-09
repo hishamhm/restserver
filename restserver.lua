@@ -75,17 +75,17 @@ local function encode(data, mimetype, schema)
    end
 end
 
-local function fail(self, request, code, msg)
-	local res = self.error_handler( request, code, msg )
-	local headers = res.headers or { ["Content-Type"] = "text/plain" }
-	local wres = response.new( code, headers )
-	local output, err = encode(res.response, headers["Content-Type"])
-	if not output then
-	  return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
-	end
-	wres:write( output )
+local function fail(self, wreq, code, msg)
+   local res = self.error_handler(wreq, code, msg)
+   local headers = res.headers or { ["Content-Type"] = "text/plain" }
+   local wres = response.new( code, headers )
+   local output, err = encode(res.response, headers["Content-Type"], self.error_schema)
+   if not output then
+      return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
+   end
+   wres:write(output)
 
-	return wres:finish()
+   return wres:finish()
 end
 
 local function match_path(self, path_info)
@@ -162,7 +162,7 @@ function restserver.new()
    server.wsapi_handler = function(wsapi_env)
       return wsapi_handler_with_self(server, wsapi_env)
    end
-   server.error_handler = function(request, code, msg, options)
+   server.error_handler = function(wreq, code, msg)
       return { response = tostring(code).." "..msg }
    end
    return server
