@@ -119,7 +119,7 @@ local function match_path(self, path_info)
    end
 end
 
-local function wsapi_handler_with_self(self, wsapi_env)
+local function wsapi_handler_with_self(self, wsapi_env, rs_api)
    local wreq = request.new(wsapi_env)
    local input_path = wsapi_env.PATH_INFO:gsub("/$", "")
    local methods = self.config.paths["^" .. input_path .. "$"] or match_path(self, wsapi_env.PATH_INFO)
@@ -143,7 +143,27 @@ local function wsapi_handler_with_self(self, wsapi_env)
    end
 
    local placeholder_matches = (entry.rest_path ~= entry.match_path) and { input_path:match(entry.match_path) } or {}
-   local ok, res = pcall(entry.handler, wreq, input, unpack(placeholder_matches))
+
+   local ok, res
+   local handler
+   local pass_wreq = false
+   if rs_api == "0.3" then
+      handler = entry.handler
+      pass_wreq = true
+   elseif entry.handle_req then
+      handler = entry.handle_req
+      pass_wreq = true
+   else
+      handler = entry.handler
+      pass_wreq = false
+   end
+
+   if pass_wreq then
+      ok, res = pcall(handler, wreq, input, unpack(placeholder_matches))
+   else
+      ok, res = pcall(handler, input, unpack(placeholder_matches))
+   end
+
    if not ok then
       return fail(self, wreq, 500, "Internal Server Error - Error in application: "..res)
    end
@@ -168,7 +188,7 @@ local function add_setter(self, var)
    end
 end
 
-function restserver.new()
+function restserver.new(rs_api)
    local server = {
       config = {
          paths = {},
@@ -186,7 +206,7 @@ function restserver.new()
    add_setter(server, "host")
    add_setter(server, "port")
    server.wsapi_handler = function(wsapi_env)
-      return wsapi_handler_with_self(server, wsapi_env)
+      return wsapi_handler_with_self(server, wsapi_env, rs_api)
    end
    server.error_handler = function(wreq, code, msg)
       return { response = tostring(code).." "..msg }
