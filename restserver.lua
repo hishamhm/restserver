@@ -38,8 +38,10 @@ end
 
 local function type_check(tbl, schema)
    for k, s in pairs(schema) do
-      if not tbl[k] and not s.optional then
+      if not tbl[k] then
+        if not s.optional then
          return nil, "missing field '"..k.."'"
+        end
       elseif type(tbl[k]) ~= s.type then
          return nil, "in field '"..k.."', expected type "..s.type..", got "..type(tbl[k])
       elseif s.array and next(tbl[k]) and not tbl[k][1] then
@@ -98,10 +100,10 @@ local function get_error_response(self, code, msg, wreq)
 end
 
 local function fail(self, wreq, code, msg)
-   local res, err = get_error_response(self, wreq, code, msg)
+   local res, err = get_error_response(self, code, msg, wreq)
    local wres = response.new(code, res.headers)
    local output
-   if res then
+   if err then
       wres = response.new(500, { ["Content-Type"] = "text/plain" })
       output = "Internal Server Error - Server built a response that fails schema validation: "..err
    else
