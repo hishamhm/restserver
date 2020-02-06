@@ -141,7 +141,7 @@ local function wsapi_handler_with_self(self, wsapi_env, rs_api)
       error("Other methods not implemented yet.")
    end
    if not input then
-      return fail(self, wreq, 400, "Bad Request - Your request fails schema validation: "..err)
+      return fail(self, wreq, 400, "Bad Request - Your request fails schema validation: "..("" or err) )
    end
 
    local placeholder_matches = (entry.rest_path ~= entry.match_path) and { input_path:match(entry.match_path) } or {}
@@ -178,7 +178,13 @@ local function wsapi_handler_with_self(self, wsapi_env, rs_api)
       return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
    end
 
-   local wres = response.new(res.config.status, { ["Content-Type"] = entry.produces or "text/plain" })
+   local headers = { ["Content-Type"] = entry.produces or "text/plain" }
+   if res.config.headers then
+     for k,v in pairs(res.config.headers) do
+        headers[k] = v
+     end
+   end
+   local wres = response.new(res.config.status,headers)
    wres:write(output)
    return wres:finish()
 end
@@ -222,6 +228,7 @@ function restserver.response()
    }
    add_setter(res, "status")
    add_setter(res, "entity")
+   add_setter(res, "headers")
    return res
 end
 

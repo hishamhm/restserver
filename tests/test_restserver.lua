@@ -37,7 +37,7 @@ server:add_resource("todo", {
 })
 
 server:add_resource("contact", {
-   {
+    {
       method = "POST",
       path = "/echo",
       consumes = "application/json",
@@ -45,22 +45,54 @@ server:add_resource("contact", {
       handler = function(body)
         return restserver.response():status(200):entity(body)
       end
-   },
-   {
+    },
+    {
       method = "POST",
       path = "/schema",
       consumes = "application/json",
       produces = "application/json",
       input_schema = {
-         name = { type = "string"},
-         age = { type = "number", optional = true },
-         address = {type = "table"},
+        name = { type = "string"},
+        age = { type = "number", optional = true },
+        address = {type = "table"},
       },      
       handler = function(body)
         return restserver.response():status(200):entity(body)
       end
-   }    
-})
+    },
+    {
+      method = "POST",
+      path = "/singleHeader",
+      consumes = "application/json",
+      produces = "application/json",
+      handler = function(body)
+        return restserver.response():status(200):entity({status="ok"}):headers({Link="/contacts/1"})
+      end
+    },
+    {
+      method = "GET",
+      path = "/manyHeaders",
+      produces = "application/json",
+      handler = function(body)
+        return restserver.response():status(200):entity({status="ok"}):headers({Link="/contacts/1",["my-custom-header"]="header content"})
+      end
+    },
+    {
+      method = "GET",
+      path = "/overrideDefault",
+      produces = "application/json",
+      handler = function(body)
+        return restserver.response():status(200):entity({status="ok"}):headers({["Content-Type"]="text/html"})
+      end
+    },
+    {
+      method = "GET",
+      path = "/noProduces",
+      handler = function(body)
+        return restserver.response():status(200):entity({status="ok"})
+      end
+    }  
+  })
 
    
 local app = connector.make_handler(server.wsapi_handler)
@@ -146,6 +178,32 @@ TestContact = {}
     local response, request = app:post("/contact/schema",con, {["Content-Type"]="application/json"}) -- empty array for headers
     lu.assertEquals(response.code, 200)
   end  
+  
+  function TestContact:testHeadersReturned()
+    local response = app:post("/contact/singleHeader", "{}", {["Content-Type"]="application/json"})
+    lu.assertEquals(response.code, 200)
+    lu.assertEquals(response.headers["Link"], "/contacts/1");
+  end
+  
+  function TestContact:testManyHeaders()
+    local response = app:get("/contact/manyHeaders")
+    lu.assertEquals(response.code, 200)
+    lu.assertEquals(response.headers["Link"], "/contacts/1");
+    lu.assertEquals(response.headers["my-custom-header"], "header content");
+  end
+  
+  function TestContact:testOverrideDefault()
+    local response = app:get("/contact/overrideDefault")
+    lu.assertEquals(response.code, 200)
+    lu.assertEquals(response.headers["Content-Type"], "text/html");
+  end  
+  
+  -- check the default content-type header returerned. i.e. if no 'produces' directive is specified we should get text/plain
+  function TestContact:testNoProduces()
+    local response = app:get("/contact/noProduces")
+    lu.assertEquals(response.code, 200)
+    lu.assertEquals(response.headers["Content-Type"], "text/plain");
+  end
   
 -- end of table TestContact
 
