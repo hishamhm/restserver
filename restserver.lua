@@ -8,7 +8,7 @@ local unpack = unpack or table.unpack
 
 local function add_resource(self, name, entries)
    for _, entry in ipairs(entries) do
-      local path = ("^/" .. name .. "/" .. entry.path):gsub("%-", "%%-"):gsub("/+", "/"):gsub("/$", "") .. "$"
+      local path = ("^/" .. name .. "/" .. entry.path):gsub("([^{]+)(%b{})", function (literal,pattern) return literal:gsub("%-", "%%-")..pattern end):gsub("/+", "/"):gsub("/$", "") .. "$"
       entry.rest_path = path
       entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)")
       path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+")

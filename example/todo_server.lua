@@ -133,6 +133,12 @@ server:set_error_handler({
 -- You can report your own server name
 server.server_name = "My To-do Server"
 
+--print("Listening for:")
+--local path_item
+--for _,path_item in ipairs(server.config.path_list) do
+--  print(path_item)
+--end
+
 -- This loads the restserver.xavante plugin
 server:enable("restserver.xavante"):start()
 
