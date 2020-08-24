@@ -160,10 +160,23 @@ local function wsapi_handler_with_self(self, wsapi_env, rs_api)
       pass_wreq = false
    end
 
+   local auth_result = entry.auth and entry.auth(wsapi_env) -- return { errorcode = 401|403, user = 'alice' } or nil 
+   if auth_result and auth_result.errorcode then
+     return fail(self, wreq, auth_result.errorcode, "Authentication error: "..(auth_result.message or ""))
+   end
+   
    if pass_wreq then
-      ok, res = pcall(handler, wreq, input, unpack(placeholder_matches))
+     if auth_result then
+      ok, res = pcall(handler, wreq, input, auth_result.user, unpack(placeholder_matches))
+     else
+       ok, res = pcall(handler, wreq, input, unpack(placeholder_matches))
+     end
    else
-      ok, res = pcall(handler, input, unpack(placeholder_matches))
+      if auth_result then
+        ok, res = pcall(handler, input, auth_result.user, unpack(placeholder_matches))
+      else
+        ok, res = pcall(handler, input, unpack(placeholder_matches))
+      end
    end
 
    if not ok then
