@@ -6,11 +6,13 @@ local response = require("wsapi.response")
 local json = require("dkjson")
 local unpack = unpack or table.unpack
 
-local function add_resource(self, name, entries)
+local function add_resource(self, name, entries, authfunc)
    for _, entry in ipairs(entries) do
       local path = ("^/" .. name .. "/" .. entry.path):gsub("([^{]+)(%b{})", function (literal,pattern) return literal:gsub("%-", "%%-")..pattern end):gsub("/+", "/"):gsub("/$", "") .. "$"
       entry.rest_path = path
       entry.match_path = path:gsub("{[^:]*:([^}]*)}", "(%1)"):gsub("{[^}]*}", "([^/]+)")
+      -- set up auth (if not already present) for all entries of this resource
+      if not entry.auth and authfunc then entry.auth = authfunc end
       path = path:gsub("{[^:]*:([^}]*)}", "%1"):gsub("{[^}]*}", "[^/]+")
       local methods = self.config.paths[path]
       if not methods then
