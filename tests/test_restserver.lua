@@ -102,6 +102,19 @@ server:add_resource("contact", {
     }  
   })
 
+-- Test authentication hooks
+server:add_resource("protected", {
+    {
+      method = "GET",
+      path = "/",
+      produces = "application/json",
+      auth = function() return {user = "guest"} end,
+      handler = function(_,user)
+        return restserver.response():status(200):entity({status="ok", message="hello "..user})
+      end
+    }
+})
+
    
 local app = connector.make_handler(server.wsapi_handler)
 
@@ -214,6 +227,15 @@ TestContact = {}
   end
   
 -- end of table TestContact
+
+TestProtected = {}
+  function TestProtected:testGuestUser()
+    local response = app:get("/protected")
+    lu.assertEquals(response.code, 200)
+    local body = json.decode(response.body)
+    lu.assertEquals("hello guest", body.message)
+  end
+-- end of table TestProtected
 
 TestPaths = {}
 
