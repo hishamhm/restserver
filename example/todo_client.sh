@@ -51,6 +51,6 @@ say "And now our list looks like this:"
 
 curl -v localhost:8080/todo
 
-say "That's all folks!"
+say "That's all folks! Cleaning up..."
 
-curl localhost:8080/todo/reset &> /dev/null # So we get the same results if we run again!
+curl -v --user 'alice:1234' localhost:8080/todo/reset # So we get the same results if we run again!

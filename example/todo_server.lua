@@ -23,11 +23,19 @@ curl -v localhost:8080/todo
 ]]
 
 local restserver = require("restserver")
+local auth = require("restserver.auth")
 
 local server = restserver:new():port(8080)
 
 local todo_list = {}
 local next_id = 0
+
+-- Credentials verification function. Typically, this would check against database user records, perform external auth lookups etc.
+local function authenticate_user(username, password)
+  if username == "alice" and password == "1234" then
+    return username
+  end
+end
 
 server:add_resource("todo", {
 
@@ -108,6 +116,10 @@ server:add_resource("todo", {
    {
       method = "GET",
       path = "/reset",
+      -- you'll need to supply basic auth creds in order to perform a 'reset'
+      auth = function(env)
+        return auth.basic_auth(env["HTTP_AUTHORIZATION"], authenticate_user)
+      end,
       produces = "application/json",
       handler = function()
          todo_list = {}
