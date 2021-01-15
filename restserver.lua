@@ -182,15 +182,15 @@ local function wsapi_handler_with_self(self, wsapi_env, rs_api)
    end
 
    if not ok then
-      return fail(self, wreq, 500, "Internal Server Error - Error in application: "..res)
+      return fail(self, wreq, 500, "Application error: "..res)
    end
    if not res then
-      return fail(self, wreq, 500, "Internal Server Error - Server failed to produce a response.")
+      return fail(self, wreq, 500, "Server failed to produce a response.")
    end
 
    local output, err = encode(res.config.entity, entry.produces, entry.output_schema)
    if not output then
-      return fail(self, wreq, 500, "Internal Server Error - Server built a response that fails schema validation: "..err)
+      return fail(self, wreq, 500, "Server built a response that fails schema validation: "..err)
    end
 
    local headers = { ["Content-Type"] = entry.produces or "text/plain" }
