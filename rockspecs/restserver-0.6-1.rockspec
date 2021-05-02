@@ -18,10 +18,12 @@ description = {
 dependencies = {
    "wsapi",
    "dkjson",
+   "base64",
 }
 build = {
    type = "builtin",
    modules = {
       restserver = "restserver.lua",
+      ["restserver.auth"] = "restserver/auth.lua",
    }
 }
