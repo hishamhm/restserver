@@ -20,8 +20,8 @@ It should be easy to follow!
 The server is a Lua script and the example client exercising the
 REST API provided by the server is a shell script powered by Curl.
 
-HTTP API
---------
+REST handlers
+-------------
 
 ### GET - No authentication
 
