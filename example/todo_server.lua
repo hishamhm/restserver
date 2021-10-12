@@ -22,6 +22,9 @@ curl -v localhost:8080/todo
 
 ]]
 
+-- debugger
+--require("mobdebug").start()
+
 local restserver = require("restserver")
 local auth = require("restserver.auth")
 
@@ -36,6 +39,9 @@ local function authenticate_user(username, password)
     return username
   end
 end
+
+local authenticator = auth.add("basic", authenticate_user)
+
 
 server:add_resource("todo", {
 
@@ -117,9 +123,7 @@ server:add_resource("todo", {
       method = "GET",
       path = "/reset",
       -- you'll need to supply basic auth creds in order to perform a 'reset'
-      auth = function(env)
-        return auth.basic_auth(env["HTTP_AUTHORIZATION"], authenticate_user)
-      end,
+      auth = authenticator,
       produces = "application/json",
       handler = function()
          todo_list = {}

@@ -1,10 +1,10 @@
-
 local restserver = {}
 
 local request = require("wsapi.request")
 local response = require("wsapi.response")
 local json = require("dkjson")
 local unpack = unpack or table.unpack
+
 
 local function add_resource(self, name, entries, authfunc)
    for _, entry in ipairs(entries) do
