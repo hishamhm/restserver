@@ -19,27 +19,17 @@ Define API in lua file and start the server.
 *server.lua*
 ```
 local restserver = require("restserver")
-
-
 local server = restserver:new():port(8585) -- create server
 
--- define REST api here
-server:add_resource("todo", {
-
-        {
-                method = "GET",
-                path = "/",
-                produces = "application/json",
-                handler = function()
-                        todos = {
-                                "wash the dishes",
-                                "get the dog out for a walk"
-                        }
-
-                        return restserver.response():status(200):entity(todos)
-                end,
-        }
-})
+server:add_resource("todo", {{  -- define REST api here
+    method = "GET",
+    path = "/",
+    produces = "application/json",
+    handler = function()
+            todos = { "wash the dishes", "get the dog out for a walk"}
+            return restserver.response():status(200):entity(todos)
+    end
+}})
 
 server:enable("restserver.xavante"):start() -- start server
 ```
