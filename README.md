@@ -14,11 +14,38 @@ Installing
 Using
 -----
 
-Check the todo-list example in the `examples/` directory.
-It should be easy to follow!
+Define API in lua file and start the server.
 
-The server is a Lua script and the example client exercising the
-REST API provided by the server is a shell script powered by Curl.
+*server.lua*
+```
+local restserver = require("restserver")
+
+
+local server = restserver:new():port(8585) -- create server
+
+-- define REST api here
+server:add_resource("todo", {
+
+        {
+                method = "GET",
+                path = "/",
+                produces = "application/json",
+                handler = function()
+                        todos = {
+                                "wash the dishes",
+                                "get the dog out for a walk"
+                        }
+
+                        return restserver.response():status(200):entity(todos)
+                end,
+        }
+})
+
+server:enable("restserver.xavante"):start() -- start server
+```
+
+Check the todo-list example in the `examples/` directory for a more in-depth look.
+
 
 REST handlers
 -------------
